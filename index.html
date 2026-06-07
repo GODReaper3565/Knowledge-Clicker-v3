@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Knowledge Clicker Deluxe v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1a1209;
+  --parchment: #f5edd8;
+  --parchment2: #ede0c4;
+  --parchment3: #e0ceaa;
+  --gold: #c8952a;
+  --gold2: #f0c050;
+  --gold3: #7a5510;
+  --red: #8b1a1a;
+  --teal: #1a5c5c;
+  --teal2: #2a8a8a;
+  --purple: #5a1a8a;
+  --purple2: #9a50cc;
+  --shadow: rgba(26,18,9,0.3);
+  --glow: rgba(200,149,42,0.4);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--ink);
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 32px, rgba(200,149,42,0.04) 32px, rgba(200,149,42,0.04) 33px),
+    repeating-linear-gradient(90deg, transparent, transparent 32px, rgba(200,149,42,0.04) 32px, rgba(200,149,42,0.04) 33px);
+  color: var(--ink);
+  font-family: 'Crimson Text', Georgia, serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+#root { display: flex; flex-direction: column; min-height: 100vh; max-width: 1300px; margin: 0 auto; padding: 12px; gap: 10px; }
+header { text-align: center; padding: 18px 12px 10px; border-bottom: 2px solid var(--gold3); position: relative; }
+header::after { content: '✦ ─────────────── ✦ ─────────────── ✦'; display: block; color: var(--gold3); font-size: 11px; margin-top: 6px; letter-spacing: 2px; }
+h1 { font-family: 'Cinzel', serif; font-size: clamp(22px, 4vw, 38px); font-weight: 900; color: var(--gold2); text-shadow: 0 0 30px var(--glow), 2px 2px 0 var(--gold3); letter-spacing: 4px; line-height: 1.1; }
+h1 small { display: block; font-size: 0.38em; letter-spacing: 8px; color: var(--parchment3); font-weight: 400; margin-top: 4px; }
+.main-grid { display: grid; grid-template-columns: 230px 1fr 230px; gap: 10px; flex: 1; }
+@media(max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+.panel { background: var(--parchment); border: 2px solid var(--gold3); border-radius: 4px; padding: 12px; position: relative; box-shadow: inset 0 0 20px rgba(200,149,42,0.06), 3px 3px 8px var(--shadow); }
+.panel-title { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 3px; color: var(--gold3); text-transform: uppercase; text-align: center; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--parchment3); }
+#stats-panel { grid-column: 1; }
+.stat-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; border-bottom: 1px dotted var(--parchment3); font-size: 13px; }
+.stat-row:last-child { border-bottom: none; }
+.stat-label { color: var(--gold3); font-style: italic; }
+.stat-val { font-family: 'Cinzel', serif; font-size: 12px; color: var(--ink); font-weight: 700; }
+.stat-val.big { font-size: 17px; color: var(--red); }
+.stat-val.asc { color: var(--purple2); }
+.offline-notice { background: var(--gold3); color: var(--parchment); font-size: 11px; padding: 5px 8px; border-radius: 2px; margin-top: 8px; text-align: center; display: none; }
+#center-panel { display: flex; flex-direction: column; gap: 10px; }
+.study-area { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px; }
+#study-btn { width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, var(--gold2), var(--gold), var(--gold3)); border: 4px solid var(--gold3); cursor: pointer; font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700; letter-spacing: 2px; color: var(--ink); text-shadow: 0 1px 0 rgba(255,255,255,0.4); box-shadow: 0 4px 16px var(--shadow), 0 0 24px var(--glow), inset 0 2px 4px rgba(255,255,255,0.3); transition: transform 0.08s, box-shadow 0.08s; touch-action: manipulation; position: relative; overflow: hidden; }
+#study-btn:active { transform: scale(0.93); box-shadow: 0 2px 8px var(--shadow), 0 0 12px var(--glow); }
+.click-gain { font-family: 'Cinzel', serif; font-size: 12px; color: var(--gold3); letter-spacing: 1px; }
+.floatie { position: fixed; font-family: 'Cinzel', serif; font-size: 16px; font-weight: 700; color: var(--gold2); text-shadow: 0 0 8px var(--glow), 1px 1px 0 var(--gold3); pointer-events: none; animation: floatUp 1s ease-out forwards; z-index: 999; }
+@keyframes floatUp { 0% { opacity:1; transform:translateY(0) scale(1); } 100% { opacity:0; transform:translateY(-60px) scale(1.4); } }
+/* Buy qty buttons */
+.buy-qty-bar { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+.qty-btn { font-family: 'Cinzel', serif; font-size: 10px; padding: 4px 8px; border: 1px solid var(--gold3); background: var(--parchment2); color: var(--ink); cursor: pointer; border-radius: 2px; letter-spacing: 1px; transition: background 0.15s; }
+.qty-btn.active { background: var(--gold3); color: var(--parchment); }
+.qty-btn:hover { background: var(--parchment3); }
+/* TABS */
+.tabs { display: flex; border-bottom: 2px solid var(--gold3); margin-bottom: 10px; flex-wrap: wrap; }
+.tab { flex: 1; min-width: 50px; padding: 6px 3px; background: none; border: none; font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 1px; color: var(--gold3); cursor: pointer; text-transform: uppercase; transition: background 0.2s; }
+.tab.active { background: var(--gold3); color: var(--parchment); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+/* BUILDINGS */
+.building-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 4px; background: var(--parchment2); border: 1px solid var(--parchment3); border-radius: 2px; cursor: pointer; transition: border-color 0.15s, background 0.15s; position: relative; }
+.building-row:hover:not(.locked) { border-color: var(--gold); background: var(--parchment3); }
+.building-row.locked { opacity: 0.4; cursor: not-allowed; }
+.building-row.affordable { border-color: var(--gold); }
+.building-icon { font-size: 20px; flex-shrink: 0; }
+.building-info { flex: 1; min-width: 0; }
+.building-name { font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; color: var(--ink); }
+.building-desc { font-size: 10px; color: var(--gold3); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.building-right { text-align: right; flex-shrink: 0; }
+.building-cost { font-family: 'Cinzel', serif; font-size: 10px; color: var(--red); font-weight: 700; }
+.building-owned { font-family: 'Cinzel', serif; font-size: 16px; font-weight: 900; color: var(--gold3); }
+.building-ps { font-size: 9px; color: var(--teal2); font-style: italic; }
+/* UPGRADES */
+.upgrade-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 5px; }
+.upgrade-btn { aspect-ratio: 1; background: var(--parchment2); border: 2px solid var(--parchment3); border-radius: 4px; cursor: pointer; font-size: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; position: relative; transition: border-color 0.15s, transform 0.1s; padding: 4px; }
+.upgrade-btn span { font-size: 8px; font-family: 'Cinzel', serif; color: var(--gold3); text-align: center; line-height: 1.1; }
+.upgrade-btn:hover:not(.locked):not(.bought) { border-color: var(--gold); transform: scale(1.05); }
+.upgrade-btn.affordable { border-color: var(--gold); box-shadow: 0 0 8px var(--glow); }
+.upgrade-btn.bought { background: var(--ink); opacity: 0.5; cursor: default; }
+.upgrade-btn.locked { opacity: 0.2; cursor: not-allowed; }
+.upgrade-tooltip { display: none; position: absolute; z-index: 50; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--parchment); font-size: 11px; padding: 6px 10px; border-radius: 3px; white-space: nowrap; border: 1px solid var(--gold3); pointer-events: none; font-family: 'Crimson Text', serif; }
+.upgrade-btn:hover .upgrade-tooltip { display: block; }
+/* PRESTIGE / ASCENSION */
+.prestige-section { text-align: center; padding: 10px; }
+.prestige-info { font-size: 13px; color: var(--gold3); margin-bottom: 10px; line-height: 1.6; }
+.prestige-gain { font-family: 'Cinzel', serif; font-size: 22px; color: var(--gold2); font-weight: 900; }
+.asc-tier-bar { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; margin: 10px 0; }
+.asc-tier { padding: 4px 8px; border-radius: 2px; font-family: 'Cinzel', serif; font-size: 10px; border: 1px solid var(--parchment3); background: var(--parchment2); color: var(--gold3); }
+.asc-tier.reached { background: linear-gradient(135deg, var(--gold3), var(--gold)); color: var(--parchment); border-color: var(--gold2); }
+.asc-tier.current { box-shadow: 0 0 10px var(--glow); border-color: var(--gold2); }
+/* ASCENSION SHOP */
+.asc-shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.asc-shop-item { background: var(--parchment2); border: 1px solid var(--parchment3); border-radius: 3px; padding: 8px; cursor: pointer; transition: border-color 0.15s; }
+.asc-shop-item:hover:not(.bought) { border-color: var(--purple2); }
+.asc-shop-item.bought { opacity: 0.5; cursor: default; background: var(--ink); color: var(--parchment); }
+.asc-shop-item.affordable { border-color: var(--purple2); box-shadow: 0 0 6px rgba(154,80,204,0.4); }
+.asc-shop-name { font-family: 'Cinzel', serif; font-size: 10px; color: var(--ink); font-weight: 700; }
+.asc-shop-item.bought .asc-shop-name { color: var(--parchment); }
+.asc-shop-desc { font-size: 10px; color: var(--gold3); font-style: italic; margin-top: 2px; }
+.asc-shop-cost { font-family: 'Cinzel', serif; font-size: 10px; color: var(--purple2); margin-top: 4px; }
+/* RESEARCH */
+.research-item { padding: 7px 10px; margin-bottom: 5px; border: 1px solid var(--parchment3); background: var(--parchment2); border-radius: 2px; cursor: pointer; transition: border-color 0.15s; }
+.research-item:hover:not(.locked):not(.done) { border-color: var(--gold); }
+.research-item.done { border-color: var(--teal); opacity: 0.6; cursor: default; }
+.research-item.locked { opacity: 0.3; cursor: not-allowed; }
+.research-name { font-family: 'Cinzel', serif; font-size: 11px; color: var(--ink); margin-bottom: 2px; }
+.research-desc { font-size: 11px; color: var(--gold3); font-style: italic; }
+.research-cost { font-size: 10px; color: var(--red); margin-top: 2px; font-family: 'Cinzel', serif; }
+/* ACHIEVEMENTS */
+.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 5px; }
+.ach-badge { aspect-ratio: 1; background: var(--parchment2); border: 2px solid var(--parchment3); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; position: relative; transition: border-color 0.2s, box-shadow 0.2s; }
+.ach-badge.earned { border-color: var(--gold); box-shadow: 0 0 10px var(--glow); }
+.ach-badge.locked { filter: grayscale(1); opacity: 0.3; }
+.ach-badge .ach-tip { display: none; position: absolute; z-index: 50; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--parchment); font-size: 11px; padding: 6px 10px; border-radius: 3px; white-space: nowrap; border: 1px solid var(--gold3); font-family: 'Crimson Text', serif; min-width: 120px; text-align: center; }
+.ach-badge:hover .ach-tip { display: block; }
+#right-panel { display: flex; flex-direction: column; gap: 10px; }
+.milestone { padding: 4px 8px; border-left: 3px solid var(--parchment3); font-size: 11px; margin-bottom: 3px; transition: border-color 0.3s; }
+.milestone.done { border-left-color: var(--gold); }
+.milestone-name { font-family: 'Cinzel', serif; font-size: 10px; color: var(--ink); }
+.milestone-desc { color: var(--gold3); font-style: italic; font-size: 10px; }
+.challenge-panel { background: linear-gradient(135deg, #2a1008, #1a1209); color: var(--parchment); border-color: var(--red); }
+.challenge-panel .panel-title { color: #e08060; }
+.challenge-name { font-family: 'Cinzel', serif; font-size: 12px; color: var(--gold2); margin-bottom: 4px; }
+.challenge-desc { font-size: 11px; color: #c0a080; font-style: italic; }
+.challenge-prog { height: 6px; background: #3a2010; border-radius: 3px; margin: 6px 0; overflow: hidden; }
+.challenge-bar { height: 100%; background: linear-gradient(90deg, var(--red), var(--gold)); border-radius: 3px; transition: width 0.5s; }
+.btn { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 1px; padding: 7px 12px; background: linear-gradient(180deg, var(--parchment2), var(--parchment3)); border: 2px solid var(--gold3); border-radius: 2px; cursor: pointer; color: var(--ink); text-transform: uppercase; transition: background 0.15s, transform 0.1s; display: inline-block; }
+.btn:hover { background: var(--parchment3); }
+.btn:active { transform: scale(0.97); }
+.btn.danger { border-color: var(--red); color: var(--red); }
+.btn.primary { background: linear-gradient(180deg, var(--gold), var(--gold3)); color: var(--parchment); border-color: var(--gold3); }
+.btn.purple { background: linear-gradient(180deg, var(--purple2), var(--purple)); color: var(--parchment); border-color: var(--purple); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+#toast { position: fixed; bottom: 20px; right: 20px; background: var(--ink); color: var(--gold2); border: 1px solid var(--gold3); font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 1px; padding: 10px 18px; border-radius: 3px; opacity: 0; transform: translateY(10px); transition: opacity 0.3s, transform 0.3s; z-index: 100; max-width: 300px; pointer-events: none; }
+#toast.show { opacity: 1; transform: translateY(0); }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--parchment2); }
+::-webkit-scrollbar-thumb { background: var(--gold3); border-radius: 3px; }
+.section-header { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 3px; color: var(--gold3); text-transform: uppercase; margin: 10px 0 6px; border-bottom: 1px dotted var(--parchment3); padding-bottom: 3px; }
+.auto-clicker-bar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--parchment2); border: 1px solid var(--parchment3); border-radius: 3px; font-size: 11px; color: var(--gold3); }
+.auto-clicker-bar .label { font-family: 'Cinzel', serif; font-size: 10px; }
+/* Ascension tier colors */
+.tier-bronze { border-color: #cd7f32 !important; }
+.tier-silver { border-color: #aaa !important; }
+.tier-gold { border-color: var(--gold2) !important; }
+.tier-platinum { border-color: #b0e0e6 !important; }
+.tier-diamond { border-color: #a8d8ea !important; box-shadow: 0 0 8px rgba(168,216,234,0.5) !important; }
+.tier-mythic { border-color: var(--purple2) !important; box-shadow: 0 0 10px rgba(154,80,204,0.6) !important; }
+</style>
+</head>
+<body>
+<div id="root">
+  <header>
+    <h1>Knowledge Clicker Deluxe<small>The Scholar's Ascent · v3.0</small></h1>
+  </header>
+
+  <div class="main-grid">
+    <!-- LEFT: Stats -->
+    <div id="stats-panel" class="panel">
+      <div class="panel-title">Ledger of Progress</div>
+      <div class="stat-row"><span class="stat-label">Knowledge</span><span class="stat-val big" id="k-stat">0</span></div>
+      <div class="stat-row"><span class="stat-label">Total Earned</span><span class="stat-val" id="total-stat">0</span></div>
+      <div class="stat-row"><span class="stat-label">Per Second</span><span class="stat-val" id="ps-stat">0</span></div>
+      <div class="stat-row"><span class="stat-label">Per Click</span><span class="stat-val" id="pc-stat">1</span></div>
+      <div class="stat-row"><span class="stat-label">Prestige Pts</span><span class="stat-val" id="p-stat">0</span></div>
+      <div class="stat-row"><span class="stat-label">Ascensions</span><span class="stat-val asc" id="asc-stat">0</span></div>
+      <div class="stat-row"><span class="stat-label">Asc. Points</span><span class="stat-val asc" id="ap-stat">0</span></div>
+      <div class="stat-row"><span class="stat-label">Asc. Tier</span><span class="stat-val asc" id="tier-stat">Initiate</span></div>
+      <div class="stat-row"><span class="stat-label">Multiplier</span><span class="stat-val" id="mult-stat">×1.00</span></div>
+      <div id="offline-notice" class="offline-notice"></div>
+      <div class="section-header" style="margin-top:10px">Active Buffs</div>
+      <div id="buff-list" style="min-height:28px;font-size:11px;color:var(--gold3);font-style:italic;">None</div>
+      <div id="auto-clicker-status" class="auto-clicker-bar" style="display:none;margin-top:8px">
+        <span>🤖</span><span class="label" id="ac-label">Auto Clicker: 1/s</span>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div id="center-panel">
+      <div class="panel">
+        <div class="study-area">
+          <button id="study-btn" onclick="doStudy(event)">STUDY</button>
+          <div class="click-gain" id="click-hint">+<span id="click-gain-txt">1</span> per click</div>
+          <div class="buy-qty-bar">
+            <button class="qty-btn active" onclick="setQty(1,this)">1×</button>
+            <button class="qty-btn" onclick="setQty(10,this)">10×</button>
+            <button class="qty-btn" onclick="setQty(100,this)">100×</button>
+            <button class="qty-btn" onclick="setQty('max',this)">MAX</button>
+            <button class="qty-btn" onclick="setQty('max_upg',this)" title="Buy all affordable upgrades" style="border-color:var(--teal2);color:var(--teal2)">MAX UPG</button>
+            <button class="qty-btn" id="frenzy-btn" onclick="activateFrenzy()" title="10× clicks for 30s" style="border-color:var(--gold2);color:var(--gold)">⚡ Frenzy</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="flex:1">
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('buildings',this)">Buildings</button>
+          <button class="tab" onclick="switchTab('upgrades',this)">Upgrades</button>
+          <button class="tab" onclick="switchTab('research',this)">Research</button>
+          <button class="tab" onclick="switchTab('achievements',this)">Feats</button>
+          <button class="tab" onclick="switchTab('prestige',this)">Prestige</button>
+          <button class="tab" onclick="switchTab('ascshop',this)" style="color:var(--purple2)">Asc Shop</button>
+        </div>
+
+        <div id="tab-buildings" class="tab-content active" style="max-height:380px;overflow-y:auto;padding-right:2px">
+          <div id="buildings-list"></div>
+        </div>
+
+        <div id="tab-upgrades" class="tab-content" style="max-height:380px;overflow-y:auto;">
+          <div id="upgrades-list" class="upgrade-grid"></div>
+        </div>
+
+        <div id="tab-research" class="tab-content" style="max-height:380px;overflow-y:auto;">
+          <div id="research-list"></div>
+        </div>
+
+        <div id="tab-achievements" class="tab-content" style="max-height:380px;overflow-y:auto;">
+          <div id="ach-grid" class="ach-grid"></div>
+        </div>
+
+        <div id="tab-prestige" class="tab-content">
+          <div class="prestige-section">
+            <p class="prestige-info">
+              Transcend your form. Sacrifice knowledge &amp; buildings for<br>
+              <span class="prestige-gain" id="prestige-preview">0</span> Prestige Points<br>
+              <span style="font-size:11px;color:var(--gold3)">Each point: +5% global mult. Accumulate for Ascension Points!</span>
+            </p>
+            <p class="prestige-info" style="font-size:11px" id="prestige-req-txt">Requires 10,000 knowledge</p>
+            <button class="btn danger" id="prestige-btn" onclick="doPrestige()">✦ Prestige ✦</button>
+
+            <div style="margin-top:16px">
+              <div class="section-header">Ascension Tiers</div>
+              <div id="asc-tier-display"></div>
+            </div>
+
+            <div style="margin-top:12px">
+              <button class="btn purple" id="ascend-btn" onclick="doAscend()">⬆ Ascend (10 Prestige)</button>
+              <div style="font-size:10px;color:var(--purple2);margin-top:4px" id="ascend-info">Ascend to gain Ascension Points &amp; unlock Tiers</div>
+            </div>
+
+            <div style="margin-top:14px">
+              <div class="section-header">Prestige Upgrades</div>
+              <div id="prestige-upgrades" style="margin-top:6px"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-ascshop" class="tab-content">
+          <div style="padding:8px">
+            <div class="prestige-info" style="font-size:12px">
+              Spend <span style="color:var(--purple2);font-family:'Cinzel',serif" id="ap-shop-display">0</span> Ascension Points on permanent upgrades
+            </div>
+            <div id="asc-shop-list" class="asc-shop-grid" style="margin-top:8px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div id="right-panel">
+      <div class="panel">
+        <div class="panel-title">Milestones</div>
+        <div id="milestones-list" style="max-height:200px;overflow-y:auto"></div>
+      </div>
+      <div class="panel challenge-panel" id="challenge-panel">
+        <div class="panel-title">Daily Challenge</div>
+        <div class="challenge-name" id="ch-name">Loading…</div>
+        <div class="challenge-desc" id="ch-desc"></div>
+        <div class="challenge-prog"><div class="challenge-bar" id="ch-bar" style="width:0%"></div></div>
+        <div style="font-size:10px;color:#c0a080;text-align:right" id="ch-prog-txt">0 / 0</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Actions</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <button class="btn" onclick="exportSave()">📤 Export Save</button>
+          <button class="btn" onclick="importSave()">📥 Import Save</button>
+          <button class="btn danger" onclick="hardReset()">🗑️ Hard Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  BUILDINGS (100 total)
+// ═══════════════════════════════════════════
+const BUILDINGS = [
+  // Tier 1: Humble Beginnings
+  { id:'candle',       name:'Candle',           icon:'🕯️',  base:10,       kps:0.2,      desc:'Dim but dedicated reading light' },
+  { id:'scroll',       name:'Scroll',            icon:'📜',  base:80,       kps:1,        desc:'Ancient wisdom, coiled tight' },
+  { id:'book',         name:'Tome',              icon:'📚',  base:500,      kps:5,        desc:'Dense volumes of lore' },
+  { id:'library',      name:'Library',           icon:'🏛️',  base:3000,     kps:20,       desc:'Halls echoing with whispers' },
+  { id:'school',       name:'School',            icon:'🏫',  base:15000,    kps:80,       desc:'Structured education for all' },
+  { id:'college',      name:'College',           icon:'🎓',  base:80000,    kps:300,      desc:'Higher learning, higher cost' },
+  { id:'oracle',       name:'Oracle',            icon:'🔮',  base:400000,   kps:1200,     desc:'Mystical fount of knowing' },
+  { id:'archive',      name:'Archive',           icon:'🗄️',  base:2e6,      kps:4500,     desc:'Repository of all recorded history' },
+  { id:'academy',      name:'Arcane Academy',    icon:'⚗️',  base:1e7,      kps:18000,    desc:'Where spells are equations' },
+  { id:'nexus',        name:'Knowledge Nexus',   icon:'🌐',  base:5e7,      kps:80000,    desc:'Collective mind of the realm' },
+  // Tier 2: Scholarly Tools
+  { id:'quill',        name:'Enchanted Quill',   icon:'🖊️',  base:2.5e8,    kps:350000,   desc:'Writes knowledge by itself' },
+  { id:'compass',      name:'Scholar\'s Compass',icon:'🧭',  base:1.2e9,    kps:1.5e6,    desc:'Navigates rivers of thought' },
+  { id:'hourglass',    name:'Time Hourglass',    icon:'⏳',  base:6e9,      kps:6.5e6,    desc:'Borrows knowledge from the future' },
+  { id:'telescope',    name:'Mind Telescope',    icon:'🔭',  base:3e10,     kps:28e6,     desc:'Magnifies distant truths' },
+  { id:'microscope',   name:'Thought Microscope',icon:'🔬',  base:1.5e11,   kps:120e6,    desc:'Studies the atoms of wisdom' },
+  // Tier 3: Mystical Structures
+  { id:'tower',        name:'Ivory Tower',       icon:'🗼',  base:8e11,     kps:500e6,    desc:'Wisdom rises to great heights' },
+  { id:'cathedral',    name:'Knowledge Cathedral',icon:'⛪', base:4e12,     kps:2.1e9,    desc:'Sacred halls of learning' },
+  { id:'pyramid',      name:'Wisdom Pyramid',    icon:'🔺',  base:2e13,     kps:9e9,      desc:'Aligned with cosmic truth' },
+  { id:'labyrinth',    name:'Mind Labyrinth',    icon:'🌀',  base:1e14,     kps:38e9,     desc:'Complex paths to enlightenment' },
+  { id:'colosseum',    name:'Scholar\'s Colosseum',icon:'🏟️',base:5e14,    kps:160e9,    desc:'Knowledge battles' },
+  // Tier 4: Cosmic Knowledge
+  { id:'observatory',  name:'Stellar Observatory',icon:'🌌', base:2.5e15,   kps:700e9,    desc:'Maps the constellations of thought' },
+  { id:'wormhole',     name:'Thought Wormhole',  icon:'🌪️',  base:1.2e16,   kps:3e12,     desc:'Shortcuts through knowledge space' },
+  { id:'nebula',       name:'Wisdom Nebula',     icon:'🌠',  base:6e16,     kps:13e12,    desc:'Stellar nursery of ideas' },
+  { id:'blackhole',    name:'Knowledge Singularity',icon:'🕳️',base:3e17,   kps:55e12,    desc:'Everything falls into knowing' },
+  { id:'galaxy',       name:'Scholar\'s Galaxy', icon:'🌙',  base:1.5e18,   kps:240e12,   desc:'A universe of wisdom' },
+  // Tier 5: Divine Institutions
+  { id:'sanctum',      name:'Sanctum of Minds',  icon:'🏰',  base:8e18,     kps:1e15,     desc:'Where gods study' },
+  { id:'pantheon',     name:'Knowledge Pantheon',icon:'⛩️',  base:4e19,     kps:4.3e15,   desc:'Divine repository of all truths' },
+  { id:'nexus2',       name:'Cosmic Nexus',      icon:'💫',  base:2e20,     kps:18.5e15,  desc:'Binds all knowledge together' },
+  { id:'eternity',     name:'Eternity Engine',   icon:'⚙️',  base:1e21,     kps:80e15,    desc:'Processes knowledge across time' },
+  { id:'omniscience',  name:'Seat of Omniscience',icon:'👁️', base:5e21,     kps:350e15,   desc:'Knows all, sees all' },
+  // Tier 6: Conceptual Constructs
+  { id:'paradox',      name:'Paradox Engine',    icon:'♾️',  base:2.5e22,   kps:1.5e18,   desc:'Knowledge through contradiction' },
+  { id:'codex',        name:'Universal Codex',   icon:'📕',  base:1.2e23,   kps:6.5e18,   desc:'The book of all books' },
+  { id:'simulation',   name:'Reality Simulator', icon:'🖥️',  base:6e23,     kps:28e18,    desc:'Simulates universes for knowledge' },
+  { id:'mind_palace',  name:'Grand Mind Palace', icon:'🧠',  base:3e24,     kps:120e18,   desc:'Architecture of pure thought' },
+  { id:'thoughtform',  name:'Thoughtform Shrine',icon:'🌺',  base:1.5e25,   kps:520e18,   desc:'Manifested mental constructs' },
+  // Tier 7: Planar Libraries
+  { id:'astral',       name:'Astral Library',    icon:'✨',  base:8e25,     kps:2.2e21,   desc:'Floats in the astral plane' },
+  { id:'ethereal',     name:'Ethereal Archive',  icon:'🌫️',  base:4e26,     kps:9.5e21,   desc:'Ghostly vaults of knowledge' },
+  { id:'shadow',       name:'Shadow Scriptorium',icon:'🌑',  base:2e27,     kps:41e21,    desc:'Dark wisdom in shadow form' },
+  { id:'elemental',    name:'Elemental Codex',   icon:'🔥',  base:1e28,     kps:176e21,   desc:'Fire, water, earth, air — all knowledge' },
+  { id:'void_lib',     name:'Void Library',      icon:'🔲',  base:5e28,     kps:760e21,   desc:'Between dimensions of knowing' },
+  // Tier 8: Temporal Constructs
+  { id:'time_vault',   name:'Temporal Vault',    icon:'🕰️',  base:2.5e29,   kps:3.3e24,   desc:'Collects knowledge from all eras' },
+  { id:'chrono',       name:'Chrono-Archive',    icon:'📅',  base:1.2e30,   kps:14e24,    desc:'Rewrites the past for better data' },
+  { id:'loop',         name:'Infinite Loop',     icon:'🔁',  base:6e30,     kps:61e24,    desc:'Endlessly refines understanding' },
+  { id:'paradox2',     name:'Temporal Paradox',  icon:'⏱️',  base:3e31,     kps:264e24,   desc:'Learns from events that never occurred' },
+  { id:'omega_clock',  name:'Omega Chronometer', icon:'🌅',  base:1.5e32,   kps:1.14e27,  desc:'Measures knowledge in eons' },
+  // Tier 9: Abstract Knowledge
+  { id:'concept',      name:'Concept Forge',     icon:'💡',  base:8e32,     kps:4.9e27,   desc:'Forges raw thought into wisdom' },
+  { id:'abstraction',  name:'Pure Abstraction',  icon:'🔷',  base:4e33,     kps:21e27,    desc:'Beyond concrete knowing' },
+  { id:'axiom',        name:'Axiom Engine',      icon:'🔑',  base:2e34,     kps:91e27,    desc:'Self-evident truths multiply' },
+  { id:'theorem',      name:'Theorem Weaver',    icon:'📐',  base:1e35,     kps:393e27,   desc:'Weaves proofs into power' },
+  { id:'proof',        name:'Grand Proof',       icon:'✏️',  base:5e35,     kps:1.69e30,  desc:'Irrefutable knowledge chains' },
+  // Tier 10: Meta-Knowledge
+  { id:'meta',         name:'Meta-Cognition Hub',icon:'🧩',  base:2.5e36,   kps:7.3e30,   desc:'Thinking about thinking' },
+  { id:'recursion',    name:'Recursion Engine',  icon:'🌊',  base:1.2e37,   kps:31e30,    desc:'Knowledge that creates itself' },
+  { id:'infinite_lib', name:'Infinite Library',  icon:'📦',  base:6e37,     kps:135e30,   desc:'Borges would be proud' },
+  { id:'omnilibrary',  name:'Omni-Library',      icon:'🏗️',  base:3e38,     kps:582e30,   desc:'Contains all possible libraries' },
+  { id:'knowledge_god',name:'Knowledge Apotheosis',icon:'🌟',base:1.5e39,  kps:2.5e33,   desc:'Become knowledge itself' },
+  // Tier 11: Philosophical Schools
+  { id:'stoic',        name:'Stoic Institute',   icon:'⚖️',  base:8e39,     kps:10.8e33,  desc:'Rational pursuit of wisdom' },
+  { id:'platonic',     name:'Platonic Academy',  icon:'🔵',  base:4e40,     kps:46.5e33,  desc:'Ideal forms of knowledge' },
+  { id:'aristotle',    name:'Peripatetic School',icon:'🚶',  base:2e41,     kps:200e33,   desc:'Walking increases understanding' },
+  { id:'dao',          name:'Dao Repository',    icon:'☯️',  base:1e42,     kps:864e33,   desc:'The way of knowing' },
+  { id:'zen_lib',      name:'Zen Library',       icon:'🎋',  base:5e42,     kps:3.72e36,  desc:'Empty mind, full knowledge' },
+  // Tier 12: Cosmic Institutions
+  { id:'star_college', name:'Stellar College',   icon:'⭐',  base:2.5e43,   kps:16e36,    desc:'Every star is a classroom' },
+  { id:'planet_lib',   name:'Planetary Library', icon:'🪐',  base:1.2e44,   kps:69e36,    desc:'Whole worlds of learning' },
+  { id:'solar_acad',   name:'Solar Academy',     icon:'☀️',  base:6e44,     kps:298e36,   desc:'Powered by stellar energy' },
+  { id:'nebula_school',name:'Nebula Conservatory',icon:'🌌', base:3e45,     kps:1.28e39,  desc:'Gas clouds of pure data' },
+  { id:'quasar',       name:'Quasar Engine',     icon:'💠',  base:1.5e46,   kps:5.5e39,   desc:'Brightest light of knowledge' },
+  // Tier 13: Mythological Sources
+  { id:'akashic',      name:'Akashic Records',   icon:'📖',  base:8e46,     kps:23.7e39,  desc:'Cosmic record of all events' },
+  { id:'yggdrasil',    name:'Yggdrasil Terminal',icon:'🌳',  base:4e47,     kps:102e39,   desc:'World-tree of wisdom' },
+  { id:'olympus',      name:'Mount Olympus',     icon:'⛰️',  base:2e48,     kps:440e39,   desc:'Divine knowledge from above' },
+  { id:'valhalla',     name:'Scholar\'s Valhalla',icon:'⚔️', base:1e49,     kps:1.9e42,   desc:'Warriors of wisdom feast here' },
+  { id:'nirvana_lib',  name:'Nirvana Archive',   icon:'🌸',  base:5e49,     kps:8.17e42,  desc:'Perfect enlightened knowing' },
+  // Tier 14: Quantum Knowledge
+  { id:'quantum',      name:'Quantum Codex',     icon:'⚛️',  base:2.5e50,   kps:35.2e42,  desc:'Superposition of all answers' },
+  { id:'entangle',     name:'Entanglement Web',  icon:'🕸️',  base:1.2e51,   kps:152e42,   desc:'Instantly shares knowledge everywhere' },
+  { id:'schrodinger',  name:'Schrödinger\'s Book',icon:'🐱', base:6e51,     kps:655e42,   desc:'Read and unread simultaneously' },
+  { id:'heisenberg',   name:'Uncertainty Oracle',icon:'❓',  base:3e52,     kps:2.82e45,  desc:'Precisely measures the unknowable' },
+  { id:'planck',       name:'Planck Institute',  icon:'🔋',  base:1.5e53,   kps:12.15e45, desc:'Smallest unit of knowledge' },
+  // Tier 15: Ultimate Structures
+  { id:'dyson',        name:'Dyson Thought Sphere',icon:'🌞',base:8e53,    kps:52.4e45,  desc:'Harvests all star-thoughts' },
+  { id:'matrioshka',   name:'Matrioshka Brain',  icon:'🧠',  base:4e54,     kps:226e45,   desc:'Planetary brain network' },
+  { id:'type3',        name:'Type III Civilization',icon:'🌍',base:2e55,    kps:973e45,   desc:'Galaxy-spanning knowledge' },
+  { id:'simulation2',  name:'Base Reality Hack', icon:'💻',  base:1e56,     kps:4.19e48,  desc:'Hacks the simulation for knowledge' },
+  { id:'everything',   name:'Theory of Everything',icon:'🔭',base:5e56,    kps:18.05e48, desc:'All knowledge, one equation' },
+  // Tier 16: Transcendental
+  { id:'transcend',    name:'Transcendent Mind',  icon:'🌈', base:2.5e57,   kps:77.7e48,  desc:'Beyond mortal comprehension' },
+  { id:'logos',        name:'The Logos',           icon:'Ω',  base:1.2e58,   kps:335e48,   desc:'Universal reason incarnate' },
+  { id:'void2',        name:'Void Omniscience',    icon:'🖤', base:6e58,     kps:1.44e51,  desc:'Knows from within the void' },
+  { id:'creation',     name:'Creation Codex',      icon:'🌅', base:3e59,     kps:6.21e51,  desc:'Contains knowledge of genesis' },
+  { id:'all_is_one',   name:'All-Is-One',           icon:'☀️', base:1.5e60,   kps:26.75e51, desc:'The ultimate unity of knowledge' },
+  // Tier 17: Beyond
+  { id:'beyond1',      name:'The Unnamed Truth',   icon:'🌟', base:8e60,     kps:115e51,   desc:'Cannot be named, only known' },
+  { id:'beyond2',      name:'Infinite Regress',    icon:'♾️', base:4e61,     kps:496e51,   desc:'Knowledge of knowledge of knowledge...' },
+  { id:'beyond3',      name:'The Last Library',    icon:'📚', base:2e62,     kps:2.13e54,  desc:'When all others are gone, this remains' },
+  { id:'beyond4',      name:'Pure Potential',      icon:'💎', base:1e63,     kps:9.19e54,  desc:'Knowledge before it becomes anything' },
+  { id:'beyond5',      name:'THE ANSWER',           icon:'42',  base:5e63,   kps:39.6e54,  desc:'You finally know. Everything.' },
+  // Tier 18: Post-Game
+  { id:'pg1',          name:'Echo of Creation',    icon:'🔊', base:2.5e64,   kps:170e54,   desc:'The first knowledge, still resonating' },
+  { id:'pg2',          name:'Moment of Big Bang',  icon:'💥', base:1.2e65,   kps:736e54,   desc:'All knowledge born in one instant' },
+  { id:'pg3',          name:'Pre-Universe',         icon:'🌑', base:6e65,     kps:3.17e57,  desc:'What existed before existence' },
+  { id:'pg4',          name:'Null Codex',            icon:'0', base:3e66,    kps:13.65e57, desc:'Knowledge of absolute nothingness' },
+  { id:'pg5',          name:'Omega Point',           icon:'Ω', base:1.5e67,  kps:58.8e57,  desc:'The end state of all intelligence' },
+];
+
+// ═══════════════════════════════════════════
+//  UPGRADES (50 total)
+// ═══════════════════════════════════════════
+const UPGRADES = [
+  // Click upgrades (10)
+  { id:'better_quill',  name:'Better Quill',       icon:'🖊️', cost:100,      req:null,           effect:'clickMult', val:2,    desc:'Double your click power' },
+  { id:'focus',         name:'Deep Focus',          icon:'🧘', cost:500,      req:null,           effect:'clickMult', val:2,    desc:'×2 click power' },
+  { id:'inspiration',   name:'Inspiration',         icon:'💡', cost:2500,     req:null,           effect:'clickMult', val:2,    desc:'×2 click power' },
+  { id:'eureka',        name:'Eureka!',              icon:'✨', cost:20000,    req:null,           effect:'clickMult', val:3,    desc:'×3 click power' },
+  { id:'genius',        name:'Genius',               icon:'🧠', cost:200000,   req:null,           effect:'clickMult', val:5,    desc:'×5 click power' },
+  { id:'polymath',      name:'Polymath',             icon:'🎯', cost:5e6,      req:null,           effect:'clickMult', val:8,    desc:'×8 click power' },
+  { id:'sage_click',    name:'Sage\'s Touch',        icon:'🌟', cost:1e8,      req:null,           effect:'clickMult', val:10,   desc:'×10 click power' },
+  { id:'divine_click',  name:'Divine Insight',       icon:'👁️', cost:5e9,      req:null,           effect:'clickMult', val:15,   desc:'×15 click power' },
+  { id:'cosmic_click',  name:'Cosmic Click',         icon:'🌌', cost:1e12,     req:null,           effect:'clickMult', val:20,   desc:'×20 click power' },
+  { id:'omni_click',    name:'Omniscient Touch',     icon:'🔱', cost:1e15,     req:null,           effect:'clickMult', val:50,   desc:'×50 click power' },
+  // Building upgrades (candle)
+  { id:'beeswax',       name:'Beeswax Candle',       icon:'🐝', cost:200,      req:{candle:1},     effect:'bldgMult',  bldg:'candle',    val:2, desc:'×2 candle output' },
+  { id:'oil_lamp',      name:'Oil Lamp',              icon:'🪔', cost:1500,     req:{candle:5},     effect:'bldgMult',  bldg:'candle',    val:2, desc:'×2 candles again' },
+  { id:'torch',         name:'Eternal Torch',         icon:'🔦', cost:20000,    req:{candle:25},    effect:'bldgMult',  bldg:'candle',    val:3, desc:'×3 candle output' },
+  // Scroll
+  { id:'silk_scroll',   name:'Silk Scroll',           icon:'🌸', cost:1000,     req:{scroll:1},     effect:'bldgMult',  bldg:'scroll',    val:2, desc:'×2 scroll output' },
+  { id:'rune_ink',      name:'Rune Ink',               icon:'🪄', cost:8000,     req:{scroll:5},     effect:'bldgMult',  bldg:'scroll',    val:2, desc:'×2 scroll output' },
+  { id:'ancient_scripts',name:'Ancient Scripts',      icon:'📿', cost:100000,   req:{scroll:25},    effect:'bldgMult',  bldg:'scroll',    val:3, desc:'×3 scroll output' },
+  // Book
+  { id:'leather_bind',  name:'Leather Binding',       icon:'📖', cost:5000,     req:{book:1},       effect:'bldgMult',  bldg:'book',      val:2, desc:'×2 tome output' },
+  { id:'golden_pages',  name:'Gilded Pages',           icon:'📋', cost:50000,    req:{book:5},       effect:'bldgMult',  bldg:'book',      val:3, desc:'×3 tome output' },
+  { id:'magic_tome',    name:'Living Tome',            icon:'📗', cost:2e6,      req:{book:25},      effect:'bldgMult',  bldg:'book',      val:5, desc:'×5 tome output' },
+  // Library
+  { id:'card_catalog',  name:'Card Catalog',           icon:'🗂️', cost:25000,    req:{library:1},    effect:'bldgMult',  bldg:'library',   val:2, desc:'×2 library output' },
+  { id:'silent_rule',   name:'Silent Rule',            icon:'🤫', cost:200000,   req:{library:5},    effect:'bldgMult',  bldg:'library',   val:2, desc:'×2 library output' },
+  { id:'grand_lib',     name:'Grand Hall',             icon:'🏛️', cost:5e6,      req:{library:25},   effect:'bldgMult',  bldg:'library',   val:4, desc:'×4 library output' },
+  // School
+  { id:'chalkboard',    name:'Chalkboard',             icon:'🪣', cost:100000,   req:{school:1},     effect:'bldgMult',  bldg:'school',    val:2, desc:'×2 school output' },
+  { id:'curriculum',    name:'Curriculum',             icon:'📐', cost:1e6,      req:{school:5},     effect:'bldgMult',  bldg:'school',    val:3, desc:'×3 school output' },
+  { id:'elite_school',  name:'Elite Curriculum',       icon:'🏆', cost:5e7,      req:{school:25},    effect:'bldgMult',  bldg:'school',    val:5, desc:'×5 school output' },
+  // College
+  { id:'honors',        name:'Honors Program',         icon:'🎓', cost:1e6,      req:{college:1},    effect:'bldgMult',  bldg:'college',   val:2, desc:'×2 college output' },
+  { id:'phd',           name:'PhD Program',            icon:'🔬', cost:2e7,      req:{college:10},   effect:'bldgMult',  bldg:'college',   val:3, desc:'×3 college output' },
+  // Oracle
+  { id:'oracle_lens',   name:'Crystal Lens',           icon:'🔭', cost:5e6,      req:{oracle:1},     effect:'bldgMult',  bldg:'oracle',    val:2, desc:'×2 oracle output' },
+  { id:'oracle_focus',  name:'Oracle\'s Clarity',      icon:'💎', cost:1e8,      req:{oracle:10},    effect:'bldgMult',  bldg:'oracle',    val:4, desc:'×4 oracle output' },
+  // Global
+  { id:'coffee',        name:'Coffee',                 icon:'☕', cost:10000,    req:null,           effect:'globalMult',val:1.1,  desc:'+10% all production' },
+  { id:'tea',           name:'Herbal Tea',              icon:'🍵', cost:100000,   req:null,           effect:'globalMult',val:1.15, desc:'+15% all production' },
+  { id:'alchemy',       name:'Alchemy',                icon:'⚗️', cost:500000,   req:null,           effect:'globalMult',val:1.25, desc:'+25% all production' },
+  { id:'meditation',    name:'Meditation',             icon:'🧘', cost:5e6,      req:null,           effect:'globalMult',val:1.5,  desc:'+50% all production' },
+  { id:'mana_infuse',   name:'Mana Infusion',          icon:'💜', cost:1e8,      req:null,           effect:'globalMult',val:2.0,  desc:'×2 all production' },
+  { id:'astral_link',   name:'Astral Link',            icon:'🌠', cost:5e9,      req:null,           effect:'globalMult',val:2.5,  desc:'×2.5 all production' },
+  { id:'divine_grant',  name:'Divine Grant',           icon:'🌟', cost:1e11,     req:null,           effect:'globalMult',val:3.0,  desc:'×3 all production' },
+  { id:'cosmic_will',   name:'Cosmic Will',            icon:'🌌', cost:1e13,     req:null,           effect:'globalMult',val:5.0,  desc:'×5 all production' },
+  // Idle / special
+  { id:'autodidact',    name:'Autodidact',             icon:'🔄', cost:50000,    req:null,           effect:'idleBonus', val:1,    desc:'Clicks count as passive income too' },
+  { id:'night_study',   name:'Night Study',            icon:'🌙', cost:5e5,      req:null,           effect:'globalMult',val:1.2,  desc:'+20% production at night' },
+  { id:'synergy_boost', name:'Grand Synergy',          icon:'🔗', cost:1e7,      req:null,           effect:'globalMult',val:1.3,  desc:'+30% from building diversity' },
+  { id:'legend_craft',  name:'Legendary Craft',        icon:'⚔️', cost:1e9,      req:null,           effect:'globalMult',val:1.75, desc:'+75% all production' },
+  // Auto-clicker upgrades
+  { id:'auto_clicker1', name:'Auto Clicker I',         icon:'🤖', cost:1e6,      req:null,           effect:'autoClick', val:1,    desc:'Automatically clicks once per second' },
+  { id:'auto_clicker2', name:'Auto Clicker II',        icon:'🦾', cost:1e8,      req:{auto_clicker1:true}, effect:'autoClick', val:3, desc:'Auto clicker speed: 3/s' },
+  { id:'auto_clicker3', name:'Auto Clicker III',       icon:'🔧', cost:1e10,     req:{auto_clicker2:true}, effect:'autoClick', val:10, desc:'Auto clicker speed: 10/s' },
+  { id:'auto_clicker4', name:'Auto Clicker IV',        icon:'⚡', cost:1e13,     req:{auto_clicker3:true}, effect:'autoClick', val:30, desc:'Auto clicker speed: 30/s' },
+  { id:'auto_clicker5', name:'Auto Clicker V',         icon:'🌟', cost:1e16,     req:{auto_clicker4:true}, effect:'autoClick', val:100, desc:'Auto clicker speed: 100/s' },
+];
+
+// ═══════════════════════════════════════════
+//  RESEARCH
+// ═══════════════════════════════════════════
+const RESEARCH = [
+  { id:'r_candle2',  name:'Night Reading',       cost:150,    req:null,               desc:'Candles produce +1 KPS base',        effect:'bldgBase', bldg:'candle', val:1 },
+  { id:'r_scroll2',  name:'Ancient Scripts',     cost:1200,   req:{r_candle2:true},   desc:'Scrolls +3 KPS base',                effect:'bldgBase', bldg:'scroll', val:3 },
+  { id:'r_crit',     name:'Critical Insight',    cost:800,    req:null,               desc:'10% chance of ×10 clicks',           effect:'crit',     val:0.1 },
+  { id:'r_crit2',    name:'Keen Perception',     cost:8000,   req:{r_crit:true},      desc:'Critical chance → 20%',              effect:'crit',     val:0.2 },
+  { id:'r_offline',  name:'Lucid Dreaming',      cost:5000,   req:null,               desc:'Offline progress at 50% rate',       effect:'offline',  val:0.5 },
+  { id:'r_offline2', name:'Dream Academy',       cost:50000,  req:{r_offline:true},   desc:'Offline progress at 75%',            effect:'offline',  val:0.75 },
+  { id:'r_frenzy',   name:'Mana Reservoir',      cost:3000,   req:null,               desc:'Unlock the Frenzy ability',          effect:'frenzy',   val:1 },
+  { id:'r_combo',    name:'Chain Reaction',       cost:20000,  req:null,               desc:'Rapid clicking builds a combo (up to ×5)', effect:'combo', val:1 },
+  { id:'r_prestige', name:'Ascension Lore',       cost:500,    req:null,               desc:'Prestige threshold lowered to 5,000', effect:'prestige_req', val:5000 },
+  { id:'r_library2', name:'Classification',       cost:40000,  req:{library:5},        desc:'Libraries grant +10 KPS base',       effect:'bldgBase', bldg:'library', val:10 },
+  { id:'r_synergy',  name:'Synergy',              cost:200000, req:null,               desc:'Each unique building type adds +2% global mult', effect:'synergy', val:1 },
+  { id:'r_quantum',  name:'Quantum Theory',       cost:1e7,    req:{r_synergy:true},   desc:'All buildings produce +5% per prestige level', effect:'prestige_bonus', val:1 },
+  { id:'r_time',     name:'Temporal Studies',     cost:5e7,    req:{r_quantum:true},   desc:'Offline progress at 90%',            effect:'offline',  val:0.9 },
+];
+
+// ═══════════════════════════════════════════
+//  ACHIEVEMENTS
+// ═══════════════════════════════════════════
+const ACHIEVEMENTS = [
+  { id:'first_click',  icon:'👆', name:'First Step',         desc:'Study for the first time',                   check:s=>s.totalClicks>=1 },
+  { id:'scholar',      icon:'📖', name:'Scholar',             desc:'Accumulate 100 knowledge',                   check:s=>s.totalK>=100 },
+  { id:'bookworm',     icon:'🐛', name:'Bookworm',            desc:'Own 10 Tomes',                               check:s=>(s.bldg.book||0)>=10 },
+  { id:'librarian',    icon:'🏛️', name:'Librarian',           desc:'Own 5 Libraries',                            check:s=>(s.bldg.library||0)>=5 },
+  { id:'nocturnal',    icon:'🦉', name:'Nocturnal',           desc:'Have 20 Candles',                            check:s=>(s.bldg.candle||0)>=20 },
+  { id:'historian',    icon:'📜', name:'Historian',           desc:'Own 10 Scrolls',                             check:s=>(s.bldg.scroll||0)>=10 },
+  { id:'prestigious',  icon:'🌟', name:'Prestigious',          desc:'Prestige for the first time',                check:s=>s.prestige>=1 },
+  { id:'ascended',     icon:'🔥', name:'Ascended',             desc:'Ascend 3 times',                             check:s=>s.ascensions>=3 },
+  { id:'millionaire',  icon:'💰', name:'Millionaire',          desc:'Earn 1,000,000 total knowledge',             check:s=>s.totalK>=1e6 },
+  { id:'billionaire',  icon:'👑', name:'Billionaire',          desc:'Earn 1 billion total knowledge',             check:s=>s.totalK>=1e9 },
+  { id:'trillionaire', icon:'💎', name:'Trillionaire',         desc:'Earn 1 trillion total knowledge',            check:s=>s.totalK>=1e12 },
+  { id:'clicker',      icon:'🖱️', name:'Clicker',              desc:'Click 100 times',                            check:s=>s.totalClicks>=100 },
+  { id:'clicker2',     icon:'👆', name:'Dedicated Clicker',    desc:'Click 10,000 times',                         check:s=>s.totalClicks>=10000 },
+  { id:'frenzied',     icon:'⚡', name:'Frenzied',             desc:'Activate Frenzy',                            check:s=>s.frenzyCount>=1 },
+  { id:'researcher',   icon:'🔬', name:'Researcher',           desc:'Complete 5 research nodes',                  check:s=>Object.values(s.research).filter(Boolean).length>=5 },
+  { id:'combo_master', icon:'💥', name:'Combo Master',         desc:'Reach a ×5 click combo',                     check:s=>s.maxCombo>=5 },
+  { id:'high_ps',      icon:'⏱️', name:'Speed of Thought',     desc:'Reach 1,000 KPS',                            check:s=>calcKPS(s)>=1000 },
+  { id:'night_owl',    icon:'🌙', name:'Night Owl',             desc:'Gain offline progress',                      check:s=>s.offlineGained>0 },
+  { id:'builder',      icon:'🏗️', name:'Master Builder',        desc:'Own 100 total buildings',                    check:s=>totalBuildings(s)>=100 },
+  { id:'megabuilder',  icon:'🏙️', name:'City of Knowledge',     desc:'Own 1000 total buildings',                   check:s=>totalBuildings(s)>=1000 },
+  { id:'ascension1',   icon:'🌈', name:'Ascendant',             desc:'Reach Bronze Tier',                          check:s=>s.ascensions>=1 },
+  { id:'ascension5',   icon:'🔮', name:'Elder Ascendant',        desc:'Reach Silver Tier',                          check:s=>s.ascensions>=5 },
+  { id:'robot',        icon:'🤖', name:'Automated',             desc:'Unlock Auto Clicker',                        check:s=>!!s.upgrades.auto_clicker1 },
+  { id:'auto5',        icon:'⚡', name:'Fully Automated',        desc:'Max out Auto Clicker',                       check:s=>!!s.upgrades.auto_clicker5 },
+];
+
+// ═══════════════════════════════════════════
+//  MILESTONES
+// ═══════════════════════════════════════════
+const MILESTONES = [
+  { name:'First Knowledge',    desc:'You have begun.',              check:s=>s.totalK>=1 },
+  { name:'100 Knowledge',      desc:'The basics understood.',       check:s=>s.totalK>=100 },
+  { name:'1K Knowledge',       desc:'A solid foundation.',          check:s=>s.totalK>=1000 },
+  { name:'10K Knowledge',      desc:'Ready to transcend.',          check:s=>s.totalK>=10000 },
+  { name:'100K Knowledge',     desc:'A true scholar.',              check:s=>s.totalK>=100000 },
+  { name:'1M Knowledge',       desc:'The library is yours.',        check:s=>s.totalK>=1e6 },
+  { name:'1B Knowledge',       desc:'A legend of learning.',        check:s=>s.totalK>=1e9 },
+  { name:'1T Knowledge',       desc:'Beyond mortal scholars.',      check:s=>s.totalK>=1e12 },
+  { name:'1Qa Knowledge',      desc:'Cosmic intellect.',            check:s=>s.totalK>=1e15 },
+  { name:'First Prestige',     desc:'Transcendence achieved.',      check:s=>s.ascensions>=1 },
+  { name:'5 Ascensions',       desc:'Silver Tier reached.',         check:s=>s.ascensions>=5 },
+  { name:'10 Ascensions',      desc:'Gold Tier!',                   check:s=>s.ascensions>=10 },
+  { name:'25 Ascensions',      desc:'Platinum Tier!',               check:s=>s.ascensions>=25 },
+  { name:'50 Ascensions',      desc:'Diamond Tier!',                check:s=>s.ascensions>=50 },
+  { name:'100 Ascensions',     desc:'Mythic Tier!',                 check:s=>s.ascensions>=100 },
+  { name:'Auto Clicker',       desc:'Let the machine study for you.',check:s=>!!s.upgrades.auto_clicker1 },
+];
+
+// ═══════════════════════════════════════════
+//  PRESTIGE UPGRADES (bought with prestige pts)
+// ═══════════════════════════════════════════
+const PRESTIGE_UPGRADES = [
+  { id:'pu_click',   name:'Enlightened Touch', cost:1, desc:'Click power ×3',        effect:'clickMult',  val:3 },
+  { id:'pu_ps',      name:'Eternal Scholar',   cost:2, desc:'+20% KPS',              effect:'globalMult', val:1.2 },
+  { id:'pu_start',   name:'Head Start',         cost:1, desc:'Start with 50 K',       effect:'startK',     val:50 },
+  { id:'pu_offline', name:'Dream Weaver',       cost:2, desc:'Full offline progress', effect:'offline',    val:1.0 },
+  { id:'pu_frenzy',  name:'Frenzy Master',      cost:3, desc:'Frenzy ×20 for 60s',   effect:'frenzy2',    val:1 },
+];
+
+// ═══════════════════════════════════════════
+//  ASCENSION TIERS
+// ═══════════════════════════════════════════
+const ASC_TIERS = [
+  { name:'Initiate',   asc:0,   bonus:'Base game',               mult:1.0,  class:'' },
+  { name:'Bronze',     asc:1,   bonus:'+10% KPS per ascension',  mult:1.1,  class:'tier-bronze' },
+  { name:'Silver',     asc:5,   bonus:'+25% KPS each run',       mult:1.25, class:'tier-silver' },
+  { name:'Gold',       asc:10,  bonus:'+50% KPS each run',       mult:1.5,  class:'tier-gold' },
+  { name:'Platinum',   asc:25,  bonus:'×2 all production',       mult:2.0,  class:'tier-platinum' },
+  { name:'Diamond',    asc:50,  bonus:'×5 all production',       mult:5.0,  class:'tier-diamond' },
+  { name:'Mythic',     asc:100, bonus:'×20 all production',      mult:20.0, class:'tier-mythic' },
+];
+
+// ═══════════════════════════════════════════
+//  ASCENSION SHOP (spent with ascension points)
+// ═══════════════════════════════════════════
+const ASC_SHOP = [
+  { id:'as_click1',   name:'Scholar\'s Legacy',     cost:1,  desc:'Click power ×5 permanently',             effect:'clickMult',  val:5 },
+  { id:'as_kps1',     name:'Eternal Momentum',      cost:1,  desc:'+100% KPS permanently',                  effect:'globalMult', val:2.0 },
+  { id:'as_start',    name:'Running Start',          cost:1,  desc:'Start each run with 10% of last KPS',   effect:'startKPS',   val:0.1 },
+  { id:'as_auto',     name:'Clockwork Scholar',      cost:2,  desc:'Auto clicker free & unlocked',          effect:'freeAuto',   val:1 },
+  { id:'as_frenzy',   name:'Manic Energy',           cost:2,  desc:'Frenzy multiplier ×30',                 effect:'frenzyMult', val:30 },
+  { id:'as_offline',  name:'Dream Hoarder',          cost:1,  desc:'Offline at 100% rate always',           effect:'fullOffline',val:1 },
+  { id:'as_click2',   name:'Transcendent Click',     cost:3,  desc:'Click power ×10 permanently',           effect:'clickMult',  val:10 },
+  { id:'as_kps2',     name:'Infinite Library',       cost:3,  desc:'×3 all production permanently',         effect:'globalMult', val:3.0 },
+  { id:'as_prestige', name:'Quick Ascent',           cost:2,  desc:'Prestige req halved',                   effect:'prestige_req_half', val:1 },
+  { id:'as_combo',    name:'Legendary Combo',        cost:2,  desc:'Max combo multiplier ×10',              effect:'maxCombo',   val:10 },
+  { id:'as_crit',     name:'Perfect Insight',        cost:2,  desc:'Crit chance +30% permanently',         effect:'critBonus',  val:0.3 },
+  { id:'as_bldg',     name:'Ancient Foundations',   cost:3,  desc:'All buildings cost 20% less',           effect:'bldgCostMult', val:0.8 },
+  { id:'as_kps3',     name:'Cosmic Intelligence',    cost:5,  desc:'×10 all production permanently',        effect:'globalMult', val:10.0 },
+  { id:'as_click3',   name:'God\'s Touch',           cost:5,  desc:'Click power ×100 permanently',          effect:'clickMult',  val:100 },
+  { id:'as_all',      name:'Ascendant\'s Gift',      cost:10, desc:'×50 everything permanently',            effect:'globalMult', val:50.0 },
+];
+
+// ═══════════════════════════════════════════
+//  DAILY CHALLENGES
+// ═══════════════════════════════════════════
+const CHALLENGES = [
+  { name:'Speed Scholar',   desc:'Earn 10,000 knowledge',     goal:s=>s.totalK,       target:10000,  reward:'☕ Coffee free!' },
+  { name:'Idle Master',     desc:'Reach 50 KPS',               goal:s=>calcKPS(s),     target:50,     reward:'+1 Prestige Point' },
+  { name:'Click Maniac',    desc:'Click 200 times',            goal:s=>s.totalClicks,  target:200,    reward:'Frenzy unlocked!' },
+  { name:'Collector',       desc:'Own 20 total buildings',     goal:s=>totalBuildings(s),target:20,   reward:'+10% KPS' },
+  { name:'Researcher',      desc:'Complete 3 research',        goal:s=>Object.values(s.research).filter(Boolean).length, target:3, reward:'+AP' },
+];
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+const DEFAULT_STATE = () => ({
+  k: 0, totalK: 0, prestige: 0, ascensions: 0, ascPoints: 0, totalAscPoints: 0,
+  bldg: {}, upgrades: {}, research: {},
+  prestigeUpgrades: {}, ascShop: {},
+  totalClicks: 0, frenzyCount: 0, maxCombo: 0,
+  offlineGained: 0,
+  last: Date.now(), achievementsEarned: {},
+  challengeDay: -1, challengeProgress: 0, challengeDone: false,
+  lastKPS: 0,
+});
+
+let s = (() => {
+  try { return Object.assign(DEFAULT_STATE(), JSON.parse(localStorage.getItem('kc3_save') || 'null') || {}); }
+  catch(e) { return DEFAULT_STATE(); }
+})();
+
+// ═══════════════════════════════════════════
+//  BUY QUANTITY
+// ═══════════════════════════════════════════
+let buyQty = 1;
+function setQty(q, btn) {
+  buyQty = q;
+  document.querySelectorAll('.qty-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════════
+//  CALCULATIONS
+// ═══════════════════════════════════════════
+function getAscTier() {
+  let tier = ASC_TIERS[0];
+  for (const t of ASC_TIERS) { if (s.ascensions >= t.asc) tier = t; }
+  return tier;
+}
+
+function getAscTierMult() {
+  const tier = getAscTier();
+  // Bronze: +10% per ascension, others: flat multiplier
+  if (s.ascensions >= 100) return 20.0;
+  if (s.ascensions >= 50) return 5.0;
+  if (s.ascensions >= 25) return 2.0;
+  if (s.ascensions >= 10) return 1.5;
+  if (s.ascensions >= 5)  return 1.25;
+  if (s.ascensions >= 1)  return 1 + s.ascensions * 0.1;
+  return 1.0;
+}
+
+function calcKPS(st) {
+  let kps = 0;
+  BUILDINGS.forEach(b => {
+    const count = st.bldg[b.id] || 0;
+    if (!count) return;
+    let base = b.kps;
+    RESEARCH.filter(r => r.effect === 'bldgBase' && r.bldg === b.id && st.research[r.id])
+            .forEach(r => base += r.val);
+    let mult = 1;
+    UPGRADES.filter(u => u.effect === 'bldgMult' && u.bldg === b.id && st.upgrades[u.id])
+            .forEach(u => mult *= u.val);
+    kps += count * base * mult;
+  });
+
+  let gm = 1;
+  gm *= 1 + (st.prestige || 0) * 0.05;
+  if (st.research && st.research.r_quantum) gm *= 1 + (st.prestige || 0) * 0.05;
+  UPGRADES.filter(u => u.effect === 'globalMult' && st.upgrades[u.id]).forEach(u => gm *= u.val);
+  PRESTIGE_UPGRADES.filter(u => u.effect === 'globalMult' && st.prestigeUpgrades[u.id]).forEach(u => gm *= u.val);
+  ASC_SHOP.filter(u => u.effect === 'globalMult' && st.ascShop[u.id]).forEach(u => gm *= u.val);
+  if (st.research && st.research.r_synergy) {
+    const unique = BUILDINGS.filter(b => (st.bldg[b.id] || 0) > 0).length;
+    gm *= 1 + unique * 0.02;
+  }
+  gm *= getAscTierMult();
+  return kps * gm;
+}
+
+function calcClickPower(st) {
+  let power = 1;
+  UPGRADES.filter(u => u.effect === 'clickMult' && st.upgrades[u.id]).forEach(u => power *= u.val);
+  PRESTIGE_UPGRADES.filter(u => u.effect === 'clickMult' && st.prestigeUpgrades[u.id]).forEach(u => power *= u.val);
+  ASC_SHOP.filter(u => u.effect === 'clickMult' && st.ascShop[u.id]).forEach(u => power *= u.val);
+  power += calcKPS(st) * 0.01;
+  return Math.max(1, Math.floor(power));
+}
+
+function globalMult(st) {
+  let g = 1 + (st.prestige || 0) * 0.05;
+  UPGRADES.filter(u => u.effect === 'globalMult' && st.upgrades[u.id]).forEach(u => g *= u.val);
+  PRESTIGE_UPGRADES.filter(u => u.effect === 'globalMult' && st.prestigeUpgrades[u.id]).forEach(u => g *= u.val);
+  ASC_SHOP.filter(u => u.effect === 'globalMult' && st.ascShop[u.id]).forEach(u => g *= u.val);
+  g *= getAscTierMult();
+  return g;
+}
+
+function totalBuildings(st) { return Object.values(st.bldg).reduce((a,b)=>a+b,0); }
+
+function bldgCostMult(st) {
+  let m = 1;
+  if (st.ascShop && st.ascShop.as_bldg) m *= 0.8;
+  return m;
+}
+
+function buildingCost(id, count) {
+  const b = BUILDINGS.find(x=>x.id===id);
+  return Math.floor(b.base * Math.pow(1.15, count) * bldgCostMult(s));
+}
+
+function buildingCostN(id, startCount, n) {
+  let total = 0;
+  for (let i = 0; i < n; i++) total += buildingCost(id, startCount + i);
+  return total;
+}
+
+function maxAffordable(id) {
+  let count = s.bldg[id] || 0;
+  let n = 0, budget = s.k;
+  while (true) {
+    const c = buildingCost(id, count + n);
+    if (budget < c) break;
+    budget -= c;
+    n++;
+    if (n > 10000) break;
+  }
+  return n;
+}
+
+function prestigeReward(st) { return Math.floor(Math.sqrt(st.totalK / 1000)); }
+function prestigeReq(st) {
+  let req = (st.research && st.research.r_prestige) ? 5000 : 10000;
+  if (st.ascShop && st.ascShop.as_prestige) req = Math.floor(req / 2);
+  return req;
+}
+
+// Ascension: costs 10 prestige, gives ascension points based on prestige total
+function ascendCost() { return 10; }
+function ascendReward() { return Math.max(1, Math.floor(Math.sqrt(s.prestige / 5))); }
+
+// ═══════════════════════════════════════════
+//  COMBO SYSTEM
+// ═══════════════════════════════════════════
+let combo = 0, comboTimer = null;
+function getCombo() {
+  if (!s.research.r_combo) return 1;
+  const maxC = s.ascShop && s.ascShop.as_combo ? 10 : 5;
+  return Math.min(maxC, 1 + Math.floor(combo / 5));
+}
+function bumpCombo() {
+  if (!s.research.r_combo) return;
+  combo = Math.min(25, combo + 1);
+  s.maxCombo = Math.max(s.maxCombo, getCombo());
+  clearTimeout(comboTimer);
+  comboTimer = setTimeout(() => { combo = 0; }, 2000);
+}
+
+// ═══════════════════════════════════════════
+//  FRENZY
+// ═══════════════════════════════════════════
+let frenzyActive = false, frenzyEnd = 0;
+function activateFrenzy() {
+  if (!s.research.r_frenzy && !(s.ascShop && s.ascShop.as_auto)) { showToast('Research "Mana Reservoir" first!'); return; }
+  if (frenzyActive) { showToast('Frenzy already active!'); return; }
+  frenzyActive = true;
+  s.frenzyCount++;
+  const dur = s.prestigeUpgrades.pu_frenzy ? 60000 : 30000;
+  frenzyEnd = Date.now() + dur;
+  showToast('⚡ FRENZY ACTIVATED!');
+  checkAchievements();
+  setTimeout(() => { frenzyActive = false; }, dur);
+}
+
+// ═══════════════════════════════════════════
+//  AUTO CLICKER
+// ═══════════════════════════════════════════
+let autoClickAccum = 0;
+function getAutoClickRate() {
+  if (!s.upgrades.auto_clicker1 && !(s.ascShop && s.ascShop.as_auto)) return 0;
+  if (s.upgrades.auto_clicker5) return 100;
+  if (s.upgrades.auto_clicker4) return 30;
+  if (s.upgrades.auto_clicker3) return 10;
+  if (s.upgrades.auto_clicker2) return 3;
+  if (s.upgrades.auto_clicker1 || (s.ascShop && s.ascShop.as_auto)) return 1;
+  return 0;
+}
+
+// ═══════════════════════════════════════════
+//  ACTIONS
+// ═══════════════════════════════════════════
+function doStudy(e) {
+  let power = calcClickPower(s);
+  if (frenzyActive) {
+    let fm = s.prestigeUpgrades.pu_frenzy ? 20 : 10;
+    if (s.ascShop && s.ascShop.as_frenzy) fm = 30;
+    power *= fm;
+  }
+  const baseCrit = s.research.r_crit2 ? 0.2 : s.research.r_crit ? 0.1 : 0;
+  const critBonus = s.ascShop && s.ascShop.as_crit ? 0.3 : 0;
+  const critChance = Math.min(0.9, baseCrit + critBonus);
+  let crit = false;
+  if (critChance && Math.random() < critChance) { power *= 10; crit = true; }
+  power *= getCombo();
+  bumpCombo();
+  if (s.upgrades.autodidact) s.k += calcKPS(s) * 0.1;
+  s.k += power;
+  s.totalK += power;
+  s.totalClicks++;
+  if (e) showFloatie(e, '+' + fmtNum(Math.floor(power)) + (crit ? ' CRIT!' : ''));
+  update();
+}
+
+function buyBuildingN(id, n) {
+  if (n === 0) return;
+  const cost = buildingCostN(id, s.bldg[id] || 0, n);
+  if (s.k < cost) return;
+  s.k -= cost;
+  s.bldg[id] = (s.bldg[id] || 0) + n;
+  update();
+}
+
+function buyBuilding(id) {
+  const qty = buyQty === 'max' || buyQty === 'max_upg' ? maxAffordable(id) : buyQty;
+  if (qty === 0) { showToast('Not enough knowledge!'); return; }
+  // Check we can actually afford the first one
+  if (s.k < buildingCost(id, s.bldg[id] || 0)) return;
+  buyBuildingN(id, qty);
+}
+
+function buyAllUpgrades() {
+  let bought = 0;
+  UPGRADES.forEach(u => {
+    if (s.upgrades[u.id]) return;
+    let reqMet = true;
+    if (u.req) for (const [k,v] of Object.entries(u.req)) {
+      if (typeof v === 'boolean' && !s.upgrades[k]) reqMet = false;
+      if (typeof v === 'number' && (s.bldg[k]||0) < v) reqMet = false;
+    }
+    if (!reqMet) return;
+    if (s.k >= u.cost) {
+      s.k -= u.cost;
+      s.upgrades[u.id] = true;
+      bought++;
+    }
+  });
+  if (bought) showToast(`Bought ${bought} upgrades!`);
+  update();
+}
+
+function buyUpgrade(id) {
+  const upg = UPGRADES.find(u=>u.id===id);
+  if (!upg || s.upgrades[id] || s.k < upg.cost) return;
+  s.k -= upg.cost;
+  s.upgrades[id] = true;
+  _lastUpgradeKey = ''; // force re-render on next tick
+  showToast(`Unlocked: ${upg.name}!`);
+}
+
+function doResearch(id) {
+  const r = RESEARCH.find(x=>x.id===id);
+  if (!r || s.research[id]) return;
+  if (s.k < r.cost) { showToast('Not enough knowledge!'); return; }
+  if (r.req) {
+    for (const [k,v] of Object.entries(r.req)) {
+      if (typeof v === 'boolean' && !s.research[k]) { showToast('Prerequisites not met!'); return; }
+      if (typeof v === 'number' && (s.bldg[k]||0) < v) { showToast('Need more buildings!'); return; }
+    }
+  }
+  s.k -= r.cost;
+  s.research[id] = true;
+  showToast(`Researched: ${r.name}!`);
+  update();
+}
+
+function buyPrestigeUpgrade(id) {
+  const pu = PRESTIGE_UPGRADES.find(u=>u.id===id);
+  if (!pu || s.prestigeUpgrades[id] || s.prestige < pu.cost) return;
+  s.prestige -= pu.cost;
+  s.prestigeUpgrades[id] = true;
+  showToast(`✦ ${pu.name} unlocked!`);
+  update();
+}
+
+function buyAscShopItem(id) {
+  const item = ASC_SHOP.find(u=>u.id===id);
+  if (!item || s.ascShop[id] || (s.ascPoints||0) < item.cost) return;
+  s.ascPoints = (s.ascPoints||0) - item.cost;
+  s.ascShop[id] = true;
+  showToast(`⬆ ${item.name} purchased!`);
+  update();
+}
+
+function doPrestige() {
+  if (s.k < prestigeReq(s)) { showToast(`Need ${fmtNum(prestigeReq(s))} knowledge!`); return; }
+  const gain = prestigeReward(s);
+  if (gain <= 0) { showToast('Gain more knowledge first!'); return; }
+  s.prestige += gain;
+  const startK = s.prestigeUpgrades.pu_start ? 50 : 0;
+  const startKPS = s.ascShop && s.ascShop.as_start ? calcKPS(s) * 0.1 : 0;
+  s.lastKPS = calcKPS(s);
+  s.k = startK + startKPS;
+  s.totalK = 0;
+  s.bldg = {}; s.upgrades = {}; s.research = {};
+  showToast(`✦ Prestige! +${gain} Prestige Points`);
+  update();
+}
+
+function doAscend() {
+  if ((s.prestige||0) < ascendCost()) { showToast(`Need ${ascendCost()} Prestige Points to Ascend!`); return; }
+  s.prestige -= ascendCost();
+  s.ascensions = (s.ascensions||0) + 1;
+  const ap = ascendReward();
+  s.ascPoints = (s.ascPoints||0) + ap;
+  s.totalAscPoints = (s.totalAscPoints||0) + ap;
+  showToast(`⬆ ASCENDED! +${ap} Ascension Points! Tier: ${getAscTier().name}`);
+  checkAchievements();
+  update();
+}
+
+// ═══════════════════════════════════════════
+//  CHALLENGE
+// ═══════════════════════════════════════════
+function getChallenge() {
+  const day = Math.floor(Date.now() / 86400000);
+  return CHALLENGES[day % CHALLENGES.length];
+}
+function initChallenge() {
+  const day = Math.floor(Date.now() / 86400000);
+  if (s.challengeDay !== day) {
+    s.challengeDay = day;
+    s.challengeProgress = 0;
+    s.challengeDone = false;
+  }
+}
+
+// ═══════════════════════════════════════════
+//  ACHIEVEMENTS
+// ═══════════════════════════════════════════
+function checkAchievements() {
+  ACHIEVEMENTS.forEach(a => {
+    if (!s.achievementsEarned[a.id] && a.check(s)) {
+      s.achievementsEarned[a.id] = true;
+      showToast(`🏆 Achievement: ${a.name}!`);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════
+//  OFFLINE PROGRESS
+// ═══════════════════════════════════════════
+function applyOffline() {
+  const elapsed = Math.max(0, Math.min((Date.now() - (s.last||Date.now())) / 1000, 86400));
+  if (elapsed < 5) return;
+  let rate = 0.1;
+  if (s.ascShop && s.ascShop.as_offline) rate = 1.0;
+  else if (s.prestigeUpgrades && s.prestigeUpgrades.pu_offline) rate = 1.0;
+  else if (s.research && s.research.r_time) rate = 0.9;
+  else if (s.research && s.research.r_offline2) rate = 0.75;
+  else if (s.research && s.research.r_offline) rate = 0.5;
+  const gained = elapsed * calcKPS(s) * rate;
+  if (gained > 0) {
+    s.k += gained;
+    s.totalK += gained;
+    s.offlineGained = (s.offlineGained||0) + gained;
+    const notice = document.getElementById('offline-notice');
+    notice.style.display = 'block';
+    notice.textContent = `⏰ Offline: +${fmtNum(Math.floor(gained))} knowledge (${Math.floor(elapsed/60)}m ${Math.floor(elapsed%60)}s)`;
+    setTimeout(() => { notice.style.display = 'none'; }, 8000);
+  }
+}
+
+// ═══════════════════════════════════════════
+//  RENDERING
+// ═══════════════════════════════════════════
+function renderBuildings() {
+  const el = document.getElementById('buildings-list');
+  const gm = globalMult(s);
+  el.innerHTML = BUILDINGS.map(b => {
+    const count = s.bldg[b.id] || 0;
+    let qty = buyQty;
+    let costDisplay, canAfford;
+    if (qty === 'max' || qty === 'max_upg') {
+      const n = maxAffordable(b.id);
+      costDisplay = n > 0 ? `Buy ${n}: 💡${fmtNum(buildingCostN(b.id, count, n))}` : `💡${fmtNum(buildingCost(b.id, count))}`;
+      canAfford = n > 0 && s.k >= buildingCost(b.id, count);
+    } else {
+      const totalCost = buildingCostN(b.id, count, qty);
+      costDisplay = `${qty > 1 ? qty+'×: ' : ''}💡${fmtNum(qty === 1 ? buildingCost(b.id, count) : totalCost)}`;
+      canAfford = s.k >= totalCost;
+    }
+    let base = b.kps;
+    RESEARCH.filter(r => r.effect==='bldgBase' && r.bldg===b.id && s.research[r.id]).forEach(r=>base+=r.val);
+    let mult = 1;
+    UPGRADES.filter(u => u.effect==='bldgMult' && u.bldg===b.id && s.upgrades[u.id]).forEach(u=>mult*=u.val);
+    const bps = (base * mult * gm).toFixed(1);
+    return `<div class="building-row ${canAfford?'affordable':''}" onclick="buyBuilding('${b.id}')">
+      <div class="building-icon">${b.icon}</div>
+      <div class="building-info">
+        <div class="building-name">${b.name}</div>
+        <div class="building-desc">${b.desc}</div>
+        <div class="building-ps">+${fmtNum(bps)} KPS each</div>
+      </div>
+      <div class="building-right">
+        <div class="building-cost">${costDisplay}</div>
+        <div class="building-owned">${count}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderUpgrades() {
+  const el = document.getElementById('upgrades-list');
+  el.innerHTML = UPGRADES.map(u => {
+    const bought = !!s.upgrades[u.id];
+    const canAfford = !bought && s.k >= u.cost;
+    let reqMet = true;
+    if (u.req) for (const [k,v] of Object.entries(u.req)) {
+      if (typeof v === 'boolean' && !s.upgrades[k]) reqMet = false;
+      if (typeof v === 'number' && (s.bldg[k]||0) < v) reqMet = false;
+    }
+    const cls = bought ? 'bought' : !reqMet ? 'locked' : canAfford ? 'affordable' : '';
+    return `<div class="upgrade-btn ${cls}" onclick="buyUpgrade('${u.id}')">
+      ${u.icon}
+      <span>${u.name}</span>
+      <div class="upgrade-tooltip"><strong>${u.name}</strong><br>${u.desc}<br>Cost: ${fmtNum(u.cost)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderResearch() {
+  const el = document.getElementById('research-list');
+  el.innerHTML = RESEARCH.map(r => {
+    const done = !!s.research[r.id];
+    let reqMet = true;
+    if (r.req) for (const [k,v] of Object.entries(r.req)) {
+      if (typeof v === 'boolean' && !s.research[k]) reqMet = false;
+      if (typeof v === 'number' && (s.bldg[k]||0) < v) reqMet = false;
+    }
+    const cls = done ? 'done' : !reqMet ? 'locked' : '';
+    return `<div class="research-item ${cls}" onclick="doResearch('${r.id}')">
+      <div class="research-name">${done?'✓ ':''}${r.name}</div>
+      <div class="research-desc">${r.desc}</div>
+      ${done ? '' : `<div class="research-cost">💡 ${fmtNum(r.cost)}</div>`}
+    </div>`;
+  }).join('');
+}
+
+function renderAchievements() {
+  const el = document.getElementById('ach-grid');
+  el.innerHTML = ACHIEVEMENTS.map(a => {
+    const earned = !!s.achievementsEarned[a.id];
+    return `<div class="ach-badge ${earned?'earned':'locked'}">
+      ${a.icon}
+      <div class="ach-tip"><strong>${a.name}</strong><br>${a.desc}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderMilestones() {
+  const el = document.getElementById('milestones-list');
+  el.innerHTML = MILESTONES.map(m => {
+    const done = m.check(s);
+    return `<div class="milestone ${done?'done':''}">
+      <div class="milestone-name">${done?'✓ ':'○ '}${m.name}</div>
+      <div class="milestone-desc">${m.desc}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderPrestigeUpgrades() {
+  const el = document.getElementById('prestige-upgrades');
+  el.innerHTML = PRESTIGE_UPGRADES.map(pu => {
+    const bought = !!s.prestigeUpgrades[pu.id];
+    const canAfford = !bought && s.prestige >= pu.cost;
+    return `<div style="display:inline-block;margin:3px">
+      <button class="btn ${bought?'':'primary'}" onclick="buyPrestigeUpgrade('${pu.id}')" ${bought?'disabled':''} style="font-size:9px;padding:5px 8px">
+        ${bought?'✓ ':''}${pu.name} (${pu.cost}pp)<br><span style="font-size:8px">${pu.desc}</span>
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function renderAscTiers() {
+  const el = document.getElementById('asc-tier-display');
+  el.innerHTML = '<div class="asc-tier-bar">' + ASC_TIERS.map(t => {
+    const reached = s.ascensions >= t.asc;
+    const current = getAscTier().name === t.name;
+    return `<div class="asc-tier ${reached?'reached':''} ${current?'current':''} ${t.class}" title="${t.bonus}">
+      ${t.name}<br><span style="font-size:8px">${t.asc > 0 ? t.asc+'× asc' : 'Start'}</span>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function renderAscShop() {
+  const el = document.getElementById('asc-shop-list');
+  el.innerHTML = ASC_SHOP.map(item => {
+    const bought = !!s.ascShop[item.id];
+    const canAfford = !bought && (s.ascPoints||0) >= item.cost;
+    const cls = bought ? 'bought' : canAfford ? 'affordable' : '';
+    return `<div class="asc-shop-item ${cls}" onclick="buyAscShopItem('${item.id}')">
+      <div class="asc-shop-name">${bought ? '✓ ' : ''}${item.name}</div>
+      <div class="asc-shop-desc">${item.desc}</div>
+      ${bought ? '' : `<div class="asc-shop-cost">🔮 ${item.cost} AP</div>`}
+    </div>`;
+  }).join('');
+  document.getElementById('ap-shop-display').textContent = fmtNum(s.ascPoints||0);
+}
+
+function renderChallenge() {
+  const ch = getChallenge();
+  const prog = ch.goal(s);
+  const pct = Math.min(100, (prog / ch.target) * 100).toFixed(1);
+  document.getElementById('ch-name').textContent = ch.name;
+  document.getElementById('ch-desc').textContent = ch.desc;
+  document.getElementById('ch-bar').style.width = pct + '%';
+  document.getElementById('ch-prog-txt').textContent = `${fmtNum(Math.min(prog, ch.target))} / ${fmtNum(ch.target)}`;
+  if (prog >= ch.target && !s.challengeDone) {
+    s.challengeDone = true;
+    showToast(`🎯 Challenge Complete! ${ch.reward}`);
+  }
+}
+
+function renderBuffs() {
+  const buffs = [];
+  if (frenzyActive) {
+    const rem = Math.max(0, Math.floor((frenzyEnd - Date.now()) / 1000));
+    let fm = s.prestigeUpgrades.pu_frenzy ? 20 : 10;
+    if (s.ascShop && s.ascShop.as_frenzy) fm = 30;
+    buffs.push(`⚡ Frenzy (${rem}s) ×${fm}`);
+  }
+  if (s.research && s.research.r_combo && combo > 0) {
+    buffs.push(`💥 Combo ×${getCombo()} (${combo} hits)`);
+  }
+  const acr = getAutoClickRate();
+  if (acr > 0) {
+    buffs.push(`🤖 Auto: ${acr}/s`);
+  }
+  document.getElementById('buff-list').innerHTML = buffs.length ? buffs.join('<br>') : 'None';
+
+  const acBar = document.getElementById('auto-clicker-status');
+  if (acr > 0) {
+    acBar.style.display = 'flex';
+    document.getElementById('ac-label').textContent = `Auto Clicker: ${acr}/s`;
+  } else {
+    acBar.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════════
+//  MASTER UPDATE
+// ═══════════════════════════════════════════
+let lastRender = 0;
+// Cache keys to detect when heavy lists need re-rendering
+let _lastUpgradeKey = '', _lastBuildingKey = '', _lastResearchKey = '';
+
+function upgradeStateKey() {
+  return JSON.stringify(s.upgrades) + '|' + JSON.stringify(s.bldg) + '|' + fmtNum(Math.floor(s.k)) + '|' + buyQty;
+}
+function buildingStateKey() {
+  return JSON.stringify(s.bldg) + '|' + fmtNum(Math.floor(s.k)) + '|' + buyQty;
+}
+function researchStateKey() {
+  return JSON.stringify(s.research) + '|' + JSON.stringify(s.bldg) + '|' + fmtNum(Math.floor(s.k));
+}
+
+function update(force) {
+  const now = Date.now();
+  if (!force && now - lastRender < 100) return;
+  lastRender = now;
+
+  const kps = calcKPS(s);
+  const cp = calcClickPower(s);
+  const tier = getAscTier();
+
+  document.getElementById('k-stat').textContent = fmtNum(Math.floor(s.k));
+  document.getElementById('total-stat').textContent = fmtNum(Math.floor(s.totalK));
+  document.getElementById('ps-stat').textContent = fmtNum(kps.toFixed(1));
+  document.getElementById('pc-stat').textContent = fmtNum(cp);
+  document.getElementById('p-stat').textContent = fmtNum(s.prestige||0);
+  document.getElementById('asc-stat').textContent = s.ascensions||0;
+  document.getElementById('ap-stat').textContent = fmtNum(s.ascPoints||0);
+  document.getElementById('tier-stat').textContent = tier.name;
+  document.getElementById('mult-stat').textContent = '×' + globalMult(s).toFixed(2);
+  document.getElementById('click-gain-txt').textContent = fmtNum(cp);
+
+  const previewGain = prestigeReward(s);
+  document.getElementById('prestige-preview').textContent = previewGain;
+  document.getElementById('prestige-req-txt').textContent = `Requires ${fmtNum(prestigeReq(s))} knowledge`;
+
+  const pb = document.getElementById('prestige-btn');
+  pb.disabled = s.k < prestigeReq(s) || previewGain <= 0;
+
+  const ab = document.getElementById('ascend-btn');
+  const ap_reward = ascendReward();
+  ab.textContent = `⬆ Ascend (${ascendCost()} PP → +${ap_reward} AP)`;
+  ab.disabled = (s.prestige||0) < ascendCost();
+
+  document.getElementById('ascend-info').textContent =
+    `Current: ${tier.name} (${s.ascensions} asc). Next tier: ${ASC_TIERS.find(t=>t.asc > s.ascensions)?.name || 'MAX'} at ${ASC_TIERS.find(t=>t.asc > s.ascensions)?.asc || '∞'} asc.`;
+
+  const bk = buildingStateKey();
+  if (force || bk !== _lastBuildingKey) { renderBuildings(); _lastBuildingKey = bk; }
+
+  const uk = upgradeStateKey();
+  if (force || uk !== _lastUpgradeKey) { renderUpgrades(); _lastUpgradeKey = uk; }
+
+  const rk = researchStateKey();
+  if (force || rk !== _lastResearchKey) { renderResearch(); _lastResearchKey = rk; }
+
+  renderAchievements();
+  renderMilestones();
+  renderPrestigeUpgrades();
+  renderAscTiers();
+  renderAscShop();
+  renderChallenge();
+  renderBuffs();
+  checkAchievements();
+  save();
+}
+
+// ═══════════════════════════════════════════
+//  GAME LOOP
+// ═══════════════════════════════════════════
+let lastTick = Date.now();
+setInterval(() => {
+  const now = Date.now();
+  const dt = (now - lastTick) / 1000;
+  lastTick = now;
+
+  const kps = calcKPS(s);
+  s.k += kps * dt;
+  s.totalK += kps * dt;
+  s.last = now;
+
+  // Auto clicker
+  const acr = getAutoClickRate();
+  if (acr > 0) {
+    autoClickAccum += acr * dt;
+    if (autoClickAccum >= 1) {
+      const clicks = Math.floor(autoClickAccum);
+      autoClickAccum -= clicks;
+      for (let i = 0; i < clicks; i++) {
+        let power = calcClickPower(s);
+        if (frenzyActive) {
+          let fm = s.prestigeUpgrades.pu_frenzy ? 20 : 10;
+          if (s.ascShop && s.ascShop.as_frenzy) fm = 30;
+          power *= fm;
+        }
+        s.k += power;
+        s.totalK += power;
+        s.totalClicks++;
+      }
+    }
+  }
+
+  update();
+}, 100);
+
+// ═══════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  update(true);
+}
+
+function showFloatie(e, text) {
+  const f = document.createElement('div');
+  f.className = 'floatie';
+  f.textContent = text;
+  f.style.left = (e.clientX - 20) + 'px';
+  f.style.top = (e.clientY - 10) + 'px';
+  document.body.appendChild(f);
+  setTimeout(() => f.remove(), 1000);
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function fmtNum(n) {
+  n = Number(n);
+  if (!isFinite(n) || isNaN(n)) return '0';
+  if (n >= 1e60) return (n/1e60).toFixed(2) + 'Nv';
+  if (n >= 1e57) return (n/1e57).toFixed(2) + 'Oc';
+  if (n >= 1e54) return (n/1e54).toFixed(2) + 'Sp';
+  if (n >= 1e51) return (n/1e51).toFixed(2) + 'Sx';
+  if (n >= 1e48) return (n/1e48).toFixed(2) + 'Qt';
+  if (n >= 1e45) return (n/1e45).toFixed(2) + 'Qd';
+  if (n >= 1e42) return (n/1e42).toFixed(2) + 'Td';
+  if (n >= 1e39) return (n/1e39).toFixed(2) + 'Dd';
+  if (n >= 1e36) return (n/1e36).toFixed(2) + 'Ud';
+  if (n >= 1e33) return (n/1e33).toFixed(2) + 'De';
+  if (n >= 1e30) return (n/1e30).toFixed(2) + 'No';
+  if (n >= 1e27) return (n/1e27).toFixed(2) + 'Oc';
+  if (n >= 1e24) return (n/1e24).toFixed(2) + 'Sp';
+  if (n >= 1e21) return (n/1e21).toFixed(2) + 'Sx';
+  if (n >= 1e18) return (n/1e18).toFixed(2) + 'Qi';
+  if (n >= 1e15) return (n/1e15).toFixed(2) + 'Qa';
+  if (n >= 1e12) return (n/1e12).toFixed(2) + 'T';
+  if (n >= 1e9)  return (n/1e9).toFixed(2) + 'B';
+  if (n >= 1e6)  return (n/1e6).toFixed(2) + 'M';
+  if (n >= 1e4)  return (n/1e3).toFixed(1) + 'K';
+  return Math.floor(n).toLocaleString();
+}
+
+// ═══════════════════════════════════════════
+//  SAVE / LOAD
+// ═══════════════════════════════════════════
+function save() { localStorage.setItem('kc3_save', JSON.stringify(s)); }
+
+function exportSave() {
+  const encoded = btoa(JSON.stringify(s));
+  const ta = document.createElement('textarea');
+  ta.value = encoded;
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  ta.remove();
+  showToast('Save copied to clipboard!');
+}
+
+function importSave() {
+  const code = prompt('Paste your save code:');
+  if (!code) return;
+  try {
+    s = Object.assign(DEFAULT_STATE(), JSON.parse(atob(code)));
+    showToast('Save imported!');
+    update(true);
+  } catch(e) { showToast('Invalid save code!'); }
+}
+
+function hardReset() {
+  if (!confirm('Are you SURE? This will erase ALL progress!')) return;
+  localStorage.removeItem('kc3_save');
+  s = DEFAULT_STATE();
+  showToast('Save wiped. Fresh start!');
+  update(true);
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+initChallenge();
+applyOffline();
+update(true);
+</script>
+</body>
+</html>
